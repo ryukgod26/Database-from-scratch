@@ -101,7 +101,7 @@ printf("db > ");
 
 MetaCommandResult do_meta_command(InputBuffer* inputBuffer){
     if(strcmp(inputBuffer->buffer,".exit") == 0){
-        printf("Existing The Database Shell.");
+        printf("Existing The Database Shell.\n");
         close_input_buffer(inputBuffer);
         exit(EXIT_SUCCESS);
     }
@@ -115,7 +115,7 @@ void read_input(InputBuffer* inputBuffer){
     ssize_t bytes_read = getline(&(inputBuffer->buffer),&(inputBuffer->buffer_length),stdin);
 
     if(bytes_read <= 0){
-        printf("Error Reading Input.");
+        printf("Error Reading Input.\n");
         exit(EXIT_FAILURE);
     }
 
@@ -150,6 +150,10 @@ PrepareResult prepare_statement(InputBuffer* inputBuffer , Statement* statement)
 
 }
 
+void print_row(Row* row){
+printf("id:%d ,Username:%s, Email:%s \n",row->id,row->username,row->email);
+}
+
 
 void serialize_row(Row* source, void* destination){
     //copying the value of id at the location dest+IDOffset of id size to store th buffer in memoery as a struct
@@ -162,7 +166,9 @@ void deserialize_row(void* source, Row* destination){
 
     memcpy(&(destination->id),source + ID_OFFSET, ID_SIZE);
     memcpy(&(destination->username), source + USERNAME_OFFSET , USERNAME_SIZE);
+    destination->username[USERNAME_SIZE] = '\0';
     memcpy(&(destination->email),source + EMAIL_OFFSET,EMAIL_SIZE);
+    destination->email[EMAIL_SIZE] = '\0';
 }
 
 void* row_slot(Table* table,uint32_t row_num){
@@ -180,11 +186,11 @@ void* row_slot(Table* table,uint32_t row_num){
 
 
 ExecuteResult execute_insert(Statement* statement, Table* table){
-    if(table->pages >= TABLE_MAX_PAGES){
+    if(table->num_rows >= TABLE_MAX_ROWS){
         return EXECUTE_TABLE_FULL;
     }
-
     Row* row_to_insert = &(statement->row_to_insert);
+    print_row(row_to_insert);
     serialize_row(row_to_insert,row_slot(table,table->num_rows));
     table->num_rows += 1;
 
@@ -224,7 +230,7 @@ Table* new_table(){
 }
 
 void free_table(Table* table){
-    for(int i =0; i< table->pages[i]; i++){
+    for(int i =0; table->pages[i]; i++){
         free(table->pages[i]);
     }
     free(table);
