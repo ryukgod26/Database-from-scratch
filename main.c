@@ -33,12 +33,21 @@ case PREPARE_SYNTAX_ERROR:
 case PREPARE_UNRECOGNISED_COMMAND:
     printf("Unrecognised Keyword at the start  %s \n",input->buffer);
     continue;
+
+case PREPARE_STRING_TOO_LONG:
+    printf("String is too long!!!\n");
+    continue;
+
+case PREPARE_NEGATIVE_ID:
+    printf("ID Cannot Be Negative.\n");
+    continue;
+    
 }
 
 switch (execute_statement(&statement,table))
 {
 case EXECUTE_SUCCESS:
-    printf("\nEXECUTED SUCCEFULLY.\n");
+    printf("\nEXECUTED SUCCEFULLY.\n");fflush(stdout);
     break;
 
 case EXECUTE_TABLE_FULL:
