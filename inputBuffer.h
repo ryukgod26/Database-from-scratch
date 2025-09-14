@@ -187,7 +187,7 @@ uint32_t* leaf_node_key(void* node, uint32_t cell_num){
     return leaf_node_cell(node,cell_num);
 }
 
-void* leaf_node_value(void* node, uint32_t cell_num){
+void* leaf_node_value(void* node, uint32_t cell_numf){
     return leaf_node_cell(node,cell_num) + LEAF_NODE_KEY_SIZE;
 }
 
@@ -324,8 +324,15 @@ void* get_page(Pager* pager, uint32_t page_num){
 
     // return pager->pages[page_num];
     
+
 }
 
+
+
+//It is commnetwd out becasue It only works when our root node is a Leaf Node 
+//when splitting happens an da Internal Node becomes the root node.
+//This function return the cell 0 of root node (Internal ) whixh does not contain any rows and it displays wrobg Info 
+/*
 Cursor* table_start(Table* table){
 Cursor* cursor = malloc(sizeof(Cursor));
 
@@ -342,6 +349,9 @@ cursor->end_of_table = (num_cells==0);
 return cursor;
 
 }
+*/
+
+
 
 
 Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key){
@@ -375,6 +385,40 @@ Cursor* leaf_node_find(Table* table, uint32_t page_num, uint32_t key){
 }
 
 
+
+
+Cursor* internal_node_find(Table* table,uint32_t page_num,uint32_t key){
+void* node  = get_page(table->pager,page_num);
+uint32_t num_keys = *internal_node_num_keys(node);
+
+//Using Binary Search to find the Index of yhe Child to Search
+uint32_t min_index = 0;
+uint32_t max_index = num_keys; //Because Yhere is One more Child Then Key
+
+while(min_index != max_index){
+uint32_t index = (min_index+max_index)/2;
+uint32_t key_to_right = *internal_node_key(node,index);
+if(key_to_right >= key){
+max_index = index;
+}
+else{
+min_index = index+1;
+}
+}
+uint32_t child_num = *internal_node_child(node,min_index);
+void* child = get_page(table->pager,child_num);
+switch(get_node_type(child)){
+	case NodeLeaf:
+		return leaf_node_find(table,child_num,key);
+		break;
+	case NodeInternal:
+		return internal_node_find(table,child_num,key);
+		break;
+}
+
+
+}
+
 //return the Position of a given Key.
 //If the Key is not Present then return the location where key should be inserted
 Cursor* table_find(Table* table,uint32_t key){
@@ -385,8 +429,9 @@ Cursor* table_find(Table* table,uint32_t key){
         return leaf_node_find(table,root_page_num,key);
     }
     else{
-        printf("Searching for Internal Node is not Implemented Yet.");
-        exit(EXIT_FAILURE);
+//        printf("Searching for Internal Node is not Implemented Yet.");
+  //      exit(EXIT_FAILURE);
+	  return internal_node_find(table,root_page_num,key);
     }
 
 }
